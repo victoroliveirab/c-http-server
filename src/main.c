@@ -22,26 +22,20 @@ int main() {
     pthread_create(&pool->thread_pool[i], NULL, worker, (void *)pool);
   }
 
-  printf("Server listening on port %d...\n", PORT);
-  fflush(stdout);
+  log_message("Server listening on port %d...\n", PORT);
 
   while (1) {
     ServerConnection_t *connection = server_receive(server);
     if (!connection->status) {
-      printf("Acceptance failed\n");
+      log_message("Acceptance failed\n");
       perror("Acceptance failed");
       free(connection);
       continue;
     }
-    printf("Enqueuing client %d\n", connection->id);
-
     pthread_mutex_lock(&pool->mutex);
     enqueue(connection_queue, (void *)&connection->id, sizeof(int));
-    char msg[256];
-    snprintf(msg, sizeof(msg), "N=%lld: Client ID enqueued: %d", ++request_id, connection->id);
-    log_message(msg);
-    snprintf(msg, sizeof(msg), "Current queue size: %d", connection_queue->size);
-    log_message(msg);
+    log_message("N=%lld: Client ID enqueued: %d", ++request_id, connection->id);
+    log_message("Current queue size: %d", connection_queue->size);
     pthread_cond_signal(&pool->cond);
     pthread_mutex_unlock(&pool->mutex);
   }

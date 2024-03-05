@@ -1,6 +1,5 @@
 #include "internal/thread_pool.h"
 #include "internal/http.h"
-#include "internal/log.h"
 #include "internal/queue.h"
 
 #include <arpa/inet.h>
@@ -58,9 +57,6 @@ void *worker(void *arg) {
     char *response = handle_request(req);
     send(id, response, strlen(response), 0);
     close(id);
-    char msg[256];
-    snprintf(msg, sizeof(msg), "Client ID handled: %d", id);
-    log_message(msg);
     free(req);
     free(client_socket);
   }

@@ -1,13 +1,14 @@
 #include "internal/log.h"
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
 
-void log_message(const char *message) {
-  FILE *logFile = fopen("server.log", "a");
-  if (logFile == NULL) {
+void log_message(const char *format, ...) {
+  FILE *log_file = fopen("server.log", "a");
+  if (log_file == NULL) {
     perror("Error opening log file");
     exit(EXIT_FAILURE);
   }
@@ -22,8 +23,15 @@ void log_message(const char *message) {
   char timestamp[26]; // Enough to hold YYYY-MM-DD HH:MM:SS.mmm
   strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", tm_struct);
   int millis = tv.tv_usec / 1000; // Convert microseconds to milliseconds
+  fprintf(log_file, "[%s] ", timestamp);
 
-  fprintf(logFile, "[%s.%03d] %s\n", timestamp, millis, message);
+  va_list args;
+  va_start(args, format);
+  vfprintf(log_file, format,
+           args); 
+  va_end(args);
 
-  fclose(logFile);
+  fprintf(log_file, "\n");
+
+  fclose(log_file);
 }
