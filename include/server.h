@@ -1,12 +1,15 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include "router.h"
+
 #include <arpa/inet.h>
 
 struct Server {
   int id;
   struct sockaddr_in address;
   socklen_t address_len;
+  Router_t * router;
 };
 
 struct ServerConnection {

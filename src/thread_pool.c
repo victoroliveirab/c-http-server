@@ -8,13 +8,14 @@
 #include <string.h>
 #include <unistd.h>
 
-ThreadPool_t *create_thread_pool(int size, JobQueue_t *queue) {
+ThreadPool_t *create_thread_pool(Server_t * server, short size) {
   ThreadPool_t *pool = malloc(sizeof(ThreadPool_t));
   pthread_mutex_init(&pool->mutex, NULL);
   pthread_cond_init(&pool->cond, NULL);
   pool->size = size;
   pool->thread_pool = malloc(size * sizeof(pthread_t));
-  pool->queue = queue;
+  pool->queue = (JobQueue_t *)queue_create();
+  pool->server = server;
   return pool;
 }
 
@@ -54,7 +55,7 @@ void *worker(void *arg) {
     char buffer[4096];
     read_socket(id, buffer, 4096);
     Request_t *req = parse_http_request(buffer);
-    char *response = handle_request(req);
+    char *response = handle_request(pool->server, req);
     send(id, response, strlen(response), 0);
     close(id);
     free(req);

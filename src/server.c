@@ -26,6 +26,8 @@ Server_t *server_init(int server_port, int server_backlog) {
     exit(EXIT_FAILURE);
   }
 
+  server->router = create_router();
+
   return server;
 }
 

@@ -1,4 +1,6 @@
 #include "internal/http.h"
+#include "../include/router.h"
+#include "../include/server.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +8,18 @@
 
 #define LINE_BREAK "\r\n"
 #define MAX_LINES 1024
+
+enum Method get_method(const char *method) {
+  if (strncmp(method, "GET", 3) == 0)
+    return GET;
+  if (strncmp(method, "POST", 4) == 0)
+    return POST;
+  if (strncmp(method, "PUT", 3) == 0)
+    return PUT;
+  if (strncmp(method, "DELETE", 6) == 0)
+    return DELETE;
+  return UNKNOWN;
+}
 
 Request_t *parse_http_request(char *request) {
   char *lines[MAX_LINES];
@@ -31,22 +45,34 @@ Request_t *parse_http_request(char *request) {
   return req;
 }
 
-char *handle_request(Request_t *req) {
+char *handle_request(Server_t *server, Request_t *req) {
   if (req == NULL) {
     return "HTTP/1.1 500 Internal Server Error\r\n"
            "Content-Type: text/html\r\n"
            "\r\n"
            "<html><body>Internal Server Error</body></html>";
   }
-  char *path = req->path;
 
-  // Just an example
-  if (strcmp(path, "/") == 0) {
-    return "HTTP/1.1 200 OK\r\n"
-           "Content-Type: text/html\r\n\r\n"
-           "<html><body><h1>Hello from home page!</h1></body></html>\r\n";
+  enum Method method = get_method(req->method);
+
+  if (method == UNKNOWN) {
+    return "HTTP/1.1 405 Method Not Allowed\r\n"
+           "Content-Type: text/html\r\n"
+           "\r\n"
+           "<html><body>Method Not Allowed</body></html>";
   }
-  return "HTTP/1.1 200 OK\r\n"
-         "Content-Type: text/html\r\n\r\n"
-         "<html><body><h1>Hello from other page.</h1></body></html>\r\n";
+
+  const char *path = req->path;
+
+  void *handler = match_route(server->router, method, path);
+
+  if (handler == NULL) {
+    return "HTTP/1.1 404 OK\r\n"
+           "Content-Type: text/html\r\n\r\n"
+           "<html><body><h1>Content not found</h1></body></html>\r\n";
+  }
+
+  char *(*handler_fn)() = (char *(*)())handler;
+  char *response = handler_fn();
+  return response;
 }
