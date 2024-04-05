@@ -20,7 +20,7 @@ $(OBJ)/main.o: $(SRC)/main.c
 $(OBJ)/router.o: $(SRC)/router.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(OBJ)/queue.o: $(SRC)/queue.c
+$(OBJ)/queue.o: $(SRC)/internal/queue.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(OBJ)/server.o: $(SRC)/server.c
